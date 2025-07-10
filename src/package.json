@@ -1,0 +1,8 @@
+{
+  "name": "mi-app-modular",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "node --experimental-modules src/main.js"
+  }
+}

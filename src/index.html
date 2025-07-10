@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zr Filter Field</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Container -->
+    <div id="myFilterContainer" class="container mt-3"></div>
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { ZrFilterField, FilterType, FieldType } from '/src/index.js';
+        
+        // Datos de ejemplo
+        const data = [
+            { id: 1, nombre: 'Producto A', precio: 100, fecha: '2023-01-01' },
+            { id: 2, nombre: 'Producto B', precio: 200, fecha: '2023-01-02' }
+        ];
+        
+        // Opciones de configuración
+        const options = {
+            filterType: FilterType.Multiple,
+            createLabel: true,
+            maxLabelCount: 2,
+            styleSize: 'sm',
+            fields: [
+                { name: 'nombre', text: 'Nombre', type: FieldType.Text, order: 1 },
+                { name: 'precio', text: 'Precio', type: FieldType.Number, order: 2 },
+                { name: 'fecha', text: 'Fecha', type: FieldType.Date, order: 3 }
+            ],
+            texts: {
+                placeholder: 'Filtrar datos pablito...'
+            }
+        };
+        
+        // Crea la instancia
+        const filter = new ZrFilterField('myFilterContainer', data, options);
+        
+        // Escucha eventos
+        filter.on('filterChange', (event) => {
+            console.log('Filtro cambiado:', event.detail);
+        });
+    </script>
+</body>
+</html>
