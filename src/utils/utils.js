@@ -29,16 +29,6 @@ export function deepCopy(target, source) {
     return target;
 }
 
-export function debounce(func, delay) {
-    let timer;
-    return function (...args) {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
-    };
-}
-
 export function getInputType(fieldType) {
     let inputType;
     switch (fieldType) {

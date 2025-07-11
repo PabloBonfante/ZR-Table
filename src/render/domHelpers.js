@@ -70,3 +70,19 @@ export function createButtonDropdown(options) {
 
     return btn;
 }
+
+export function createBtnGroup() {
+    const group = document.createElement('div');
+    group.className = 'btn-group';
+
+    return group;
+}
+
+export function createDropdownMenu() {
+    const ul = document.createElement('ul');
+    ul.className = 'dropdown-menu dropdown-menu-lg-end';
+    ul.setAttribute('data-bs-popper', 'static');
+
+    return ul;
+}
+

@@ -1,8 +1,23 @@
 import { FilterType, FieldType } from '../constants/enums.js';
 import { defaultFieldTemplate, defaultOptions } from '../template/template.js';
 import { validateEnum } from '../utils/validation.js';
-import { getFieldByName, deepCopy, debounce, getInputType, getSelectedFieldText, getSelectedFieldTitle, initColumnsFromData, onceInitialize, sanitize } from '../utils/utils.js';
-import { createInput, createDropdownItem, createHeaderDropdown, createDividerDropdown, createButtonDropdown } from '../render/domHelpers.js';
+import { setupDropdownEvents, setupFilterInput } from '../events/filterFieldEvents.js';
+import {
+    deepCopy,
+    getInputType,
+    getSelectedFieldText,
+    getSelectedFieldTitle,
+    initColumnsFromData,
+} from '../utils/utils.js';
+import {
+    createInput,
+    createDropdownItem,
+    createHeaderDropdown,
+    createDividerDropdown,
+    createButtonDropdown,
+    createBtnGroup,
+    createDropdownMenu
+} from '../render/domHelpers.js';
 
 export class ZrFilterField {
     constructor(containerId, data, options = {}) {
@@ -23,7 +38,7 @@ export class ZrFilterField {
 
         this.elements = {
             input: this.container.querySelector('input[data-input-filter="True"]') || document.createElement('input'),
-            ul: this.container.querySelector('ul') || document.createElement('ul'),
+            ul: this.container.querySelector('ul') || createDropdownMenu(),
             tigger: this.container.querySelector('button') || createButtonDropdown(this.options),
             label: this.container.querySelector('label[data-label-filter="True"]') || document.createElement('label'),
         };
@@ -32,9 +47,6 @@ export class ZrFilterField {
         this.filteredFields = options.filteredFields || [];
         this.isInit = false;
         this._eventTarget = new EventTarget();
-
-        // Método debounce
-        this.debouncedHandleFilterChange = debounce(this.filterChangeValue.bind(this), 800);
 
         if ((this.data || this.options.fields) && !this.isInit) {
             this.init();
@@ -71,11 +83,11 @@ export class ZrFilterField {
             this.renderLabel(input.id);
         }
 
-        const group = document.createElement('div');
-        group.className = 'btn-group';
+        const group = createBtnGroup();
         group.appendChild(input);
         group.appendChild(dropdown);
 
+        // Contenedor para serpara el label del grupo
         const div = document.createElement('div');
 
         div.appendChild(group);
@@ -101,88 +113,31 @@ export class ZrFilterField {
         input.dataset.inputFilter = 'True';
         input.value = this.options.webForms.inputValue || '';
 
-        onceInitialize(input, () => {
-            input.addEventListener('input', (e) => {
-                this.debouncedHandleFilterChange(e.target.value.trim());
-            });
-        });
+        // Evento
+        this._cleanupInputEvents = setupFilterInput(input, this);
 
         this.elements.input = input;
         return input;
     }
 
     createDropdown() {
-        const dropdown = document.createElement('div');
-        dropdown.className = 'btn-group';
+        const Group = createBtnGroup();
 
-        // Btn
-        dropdown.appendChild(this.elements.tigger);
+        // Btn tigger
+        Group.appendChild(this.elements.tigger);
 
+        // elements
         const ul = this.createDropdownList();
-        dropdown.appendChild(ul);
+        Group.appendChild(ul);
 
-        onceInitialize(dropdown, () => {
-            dropdown.addEventListener('hide.bs.dropdown', () => {
-                if (this.options.createLabel) {
-                    this.elements.label.textContent = getSelectedFieldText(this.fields, this.filteredFields, this.options);
-                    this.elements.label.title = getSelectedFieldTitle(this.fields, this.filteredFields);
-                }
-                this.options.isOpen = false;
-                this.riseEvent();
-            });
+        // Eventos
+        this._cleanupDropdownEvents = setupDropdownEvents(Group, this);
 
-            dropdown.addEventListener('show.bs.dropdown', () => {
-                this.options.isOpen = true;
-            });
-        });
-
-        return dropdown;
-    }
-
-    handleDropdownClick(event) {
-        const clickedLi = event.target.closest('li');
-        if (!clickedLi) return;
-
-        const checkbox = clickedLi.querySelector('input');
-        if (!checkbox) return;
-
-        const isMultiple = this.options.filterType === FilterType.Multiple;
-
-        if (isMultiple) {
-            const selectedCount = this.filteredFields.length;
-
-            if (((selectedCount <= this.options.minSelected && checkbox.checked) ||
-                (this.options.maxSelected && selectedCount >= this.options.maxSelected && !checkbox.checked))) {
-                event.preventDefault();
-                event.stopPropagation();
-                return;
-            }
-
-            checkbox.checked = !checkbox.checked;
-
-            this.filteredFields = checkbox.checked
-                ? [...this.filteredFields, checkbox.value]
-                : this.filteredFields.filter(f => f !== checkbox.value);
-        } else {
-            checkbox.checked = true;
-            this.filteredFields = [checkbox.value];
-
-            const field = getFieldByName(this.fields, checkbox.value);
-            const newType = getInputType(field.type);
-            if (this.elements.input.type !== newType)
-                this.elements.input.type = newType;
-        }
+        return Group;
     }
 
     createDropdownList() {
         const ul = this.elements.ul;
-        ul.className = 'dropdown-menu dropdown-menu-lg-end';
-        ul.setAttribute('data-bs-popper', 'static');
-
-        onceInitialize(ul, () => {
-            ul.addEventListener('click', this.handleDropdownClick.bind(this));
-        });
-
         ul.innerHTML = ''; // Limpia por si se vuelve a renderizar
         ul.appendChild(createHeaderDropdown(this.options.texts));
         ul.appendChild(createDividerDropdown());
@@ -233,28 +188,6 @@ export class ZrFilterField {
             return this.filteredFields.includes(fieldName);
 
         return isSingleSelect ? index === 0 : true;
-    }
-
-    filterChangeValue(val) {
-        this.filterValue = val;
-        this.riseEvent();
-    }
-
-    riseEvent() {
-        const data = { fields: this.filteredFields, value: this.filterValue }
-        this.emit('filterChange', data);
-
-        // manejo del PostBack
-        if (this.options.webForms.autoPostBack && typeof __doPostBack === 'function') {
-            const options = {
-                isOpen: this.options.webForms.isOpen,
-                label: sanitize(this.elements.label.textContent || ''),
-                inputType: this.elements.input.type,
-                data: sanitize(data),
-            };
-
-            __doPostBack(this.container.getAttribute('name'), `filterChange$${JSON.stringify(options)}`);
-        }
     }
 
     getVisibleFields() {
