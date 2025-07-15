@@ -46,9 +46,11 @@ export function createDropdownItemSelectAll(text, title, containerId, isChecked,
     input.id = `${containerId}_filter_opt_SelectAll`;
     input.type = 'checkbox';
     input.checked = isChecked;
+    input.dataset.checked = isChecked;
     input.indeterminate = isIntermediate;
     input.className = 'form-check-input me-1 pe-none';
     input.value = 'SelectAll';
+    input.dataset.selectAll = 'True';
 
     const label = document.createElement('label');
     label.setAttribute('for', input.id);

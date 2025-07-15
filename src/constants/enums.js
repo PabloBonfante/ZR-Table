@@ -10,3 +10,11 @@ export const FilterType = {
     Multiple: 'multiple',
     Single: 'single'
 };
+
+export const InputType = {
+    Text: 'text',
+    Search: 'search',
+    Number: 'number',
+    Date: 'date',
+    DateTime: 'datetime-local',
+};

@@ -1,4 +1,4 @@
-import { FilterType, FieldType } from '../constants/enums.js';
+import { FilterType, FieldType, InputType } from '../constants/enums.js';
 import { defaultFieldTemplate } from '../template/template.js';
 
 export function getFieldByName(fields, name) {
@@ -33,21 +33,21 @@ export function getInputType(fieldType) {
     let inputType;
     switch (fieldType) {
         case FieldType.Text:
-            inputType = 'search'
+            inputType = InputType.Search
             break;
         case FieldType.Number:
         case FieldType.Decimal:
-            inputType = 'number'
+            inputType = InputType.Number
             break;
         case FieldType.Date:
-            inputType = 'date'
+            inputType = InputType.Date
             break;
         case FieldType.DateTime:
-            inputType = 'datetime-local'
+            inputType = InputType.DateTime
             break;
 
         default:
-            inputType = 'search'
+            inputType = InputType.Text
             break;
     }
 

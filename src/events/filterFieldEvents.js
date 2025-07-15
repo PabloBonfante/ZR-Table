@@ -71,8 +71,8 @@ function handleDropdownClick(event, instance) {
 
     if (isMultiple) {
         const selectedCount = instance.filteredFields.length;
-        if ((selectedCount <= instance.options.minSelected && checkbox.checked) ||
-            (instance.options.maxSelected && selectedCount >= instance.options.maxSelected && !checkbox.checked)) {
+        if (checkbox.dataset.selectAll !== 'True' && ((selectedCount <= instance.options.minSelected && checkbox.checked) ||
+            (instance.options.maxSelected && selectedCount >= instance.options.maxSelected && !checkbox.checked))) {
             event.preventDefault();
             event.stopPropagation();
             return;
@@ -90,7 +90,10 @@ function handleDropdownClick(event, instance) {
 
 // Helper para selección de todos
 function handleAllSelection(checkbox, instance) {
-    checkbox.checked = !checkbox.checked;
+    const isChecked = checkbox.dataset.checked === 'true';
+    checkbox.checked = !isChecked; 
+    checkbox.dataset.checked = !isChecked; // lo niego
+
     updateAllFilteredFields(checkbox, instance);
     updateIntermediate(instance);
 }
@@ -118,14 +121,22 @@ function updateFilteredFields(checkbox, instance) {
 
 // Helper para actualizar campos filtrados
 function updateAllFilteredFields(checkbox, instance) {
-    if (checkbox.checked) {
-        instance.filteredFields = instance.getVisibleFields().map((f) => f.name);
+    const visibleFields = instance.getVisibleFields().map((f) => f.name);
+    const checked = checkbox.checked;
+    const min = instance.options.minSelected;
+    const max = instance.options.maxSelected || visibleFields.length; // Valor por defecto: todos
+
+    if (checked) {
+        const fieldsToSelect = visibleFields.slice(0, max); // Corta el array hasta el máximo
+        instance.filteredFields = fieldsToSelect;
     } else {
-        instance.filteredFields = [];
+        const fieldsToSelect = visibleFields.slice(0, min); // Corta el array hasta el mínimo
+        instance.filteredFields = fieldsToSelect;
     }
 
+    // cambios los checked
     instance.elements.ul.querySelectorAll('input:not([data-select-all])').forEach(element => {
-        element.checked = checkbox.checked;
+        element.checked = instance.filteredFields.includes(element.value);
     });
 }
 

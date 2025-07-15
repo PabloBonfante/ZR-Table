@@ -1,18 +1,14 @@
 import { FilterType, FieldType } from '../constants/enums.js';
 import { defaultFieldTemplate, defaultOptions } from '../template/template.js';
 import { validateEnum } from '../utils/validation.js';
-import { setupDropdownEvents, setupFilterInput } from '../events/filterFieldEvents.js';
+import { setupDropdownEvents } from '../events/filterFieldEvents.js';
 import {
     deepCopy,
-    getInputType,
-    getSelectedFieldText,
-    getSelectedFieldTitle,
     initColumnsFromData,
     getSelectAllState,
     onceInitialize
 } from '../utils/utils.js';
 import {
-    createInput,
     createDropdownItem,
     createHeaderDropdown,
     createDividerDropdown,
