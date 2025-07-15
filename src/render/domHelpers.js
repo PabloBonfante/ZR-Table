@@ -36,6 +36,31 @@ export function createDropdownItem(field, title, index, containerId, isSingleSel
     return li;
 }
 
+export function createDropdownItemSelectAll(text, title, containerId, isChecked, isIntermediate) {
+    const li = document.createElement('li');
+    li.className = 'dropdown-item pointer';
+    if (title && title !== '') li.title = title;
+    li.dataset.selectAll = 'True';
+
+    const input = document.createElement('input');
+    input.id = `${containerId}_filter_opt_SelectAll`;
+    input.type = 'checkbox';
+    input.checked = isChecked;
+    input.indeterminate = isIntermediate;
+    input.className = 'form-check-input me-1 pe-none';
+    input.value = 'SelectAll';
+
+    const label = document.createElement('label');
+    label.setAttribute('for', input.id);
+    label.className = 'form-check-label pe-none';
+    label.textContent = text;
+
+    li.appendChild(input);
+    li.appendChild(label);
+
+    return li;
+}
+
 
 export function createHeaderDropdown(texts) {
     if (!texts || typeof texts !== 'object') return;

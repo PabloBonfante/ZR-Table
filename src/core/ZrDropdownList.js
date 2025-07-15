@@ -8,7 +8,8 @@ import {
     getSelectedFieldText,
     getSelectedFieldTitle,
     initColumnsFromData,
-    getSelectAllState
+    getSelectAllState,
+    onceInitialize
 } from '../utils/utils.js';
 import {
     createInput,
@@ -21,7 +22,7 @@ import {
     createDropdownItemSelectAll
 } from '../render/domHelpers.js';
 
-export class ZrFilterField {
+export class ZrDropdownList {
     constructor(containerId, data, options = {}) {
         this.container = document.getElementById(containerId);
         this.data = data;
@@ -39,14 +40,11 @@ export class ZrFilterField {
             : [];
 
         this.elements = {
-            input: this.container.querySelector('input[data-input-filter="True"]') || document.createElement('input'),
             ul: this.container.querySelector('ul') || createDropdownMenu(),
             tigger: this.container.querySelector('button') || createButtonDropdown(this.options),
-            label: this.container.querySelector('label[data-label-filter="True"]') || document.createElement('label'),
         };
 
-        this.filterValue = options.filterValue || '';
-        this.filteredFields = options.filteredFields || [];
+        this.selecteds = options.selecteds || [];
         this.isInit = false;
         this._eventTarget = new EventTarget();
 
@@ -71,55 +69,15 @@ export class ZrFilterField {
     }
 
     initializeColumnsFromData() {
-        if (this.options.autoGenerateField && this.container.dataset.initialize !== 'True')
-            this.fields = initColumnsFromData(this.fields, this.data);
-
-        this.container.dataset.initialize = 'True';
+        onceInitialize(this.container, () => {
+            if (this.options.autoGenerateField) this.fields = initColumnsFromData(this.fields, this.data);
+        });
     }
 
     render() {
-        const input = this.createInput();
         const dropdown = this.createDropdown();
-
-        if (this.options.createLabel) {
-            this.renderLabel(input.id);
-        }
-
-        const group = createBtnGroup();
-        group.appendChild(input);
-        group.appendChild(dropdown);
-
-        // Contenedor para serpara el label del grupo
-        const div = document.createElement('div');
-
-        div.appendChild(group);
-        this.container.appendChild(div);
+        this.container.appendChild(dropdown);
         this.openIfRequired(dropdown);
-    }
-
-    createInput() {
-        const input = createInput(
-            `${this.container.id}_inputFiltro`,
-            this.options.filterType === FilterType.Multiple
-                ? 'search'
-                : getInputType(this.fields[0]?.type || 'search'),
-            'form-control rounded-0 rounded-start z-3 w-auto',
-            this.options.texts.placeholder,
-            this.options.texts.title
-        );
-
-        if (this.options.styleSize && typeof this.options.styleSize === 'string') {
-            input.classList.add(`form-control-${this.options.styleSize}`);
-        }
-
-        input.dataset.inputFilter = 'True';
-        input.value = this.options.webForms.inputValue || '';
-
-        // Evento
-        this._cleanupInputEvents = setupFilterInput(input, this);
-
-        this.elements.input = input;
-        return input;
     }
 
     createDropdown() {
@@ -145,6 +103,12 @@ export class ZrFilterField {
         const divider = createDividerDropdown();
         ul.appendChild(divider);
 
+        // creo y renderizo los elementos del ul
+        this.rederListElements(ul, divider);
+        return ul;
+    }
+
+    rederListElements(ul, divider) {
         const isSingleSelect = this.options.filterType === FilterType.Single;
 
         this.getVisibleFields().forEach((field, index) => {
@@ -159,14 +123,14 @@ export class ZrFilterField {
             );
 
             if (isChecked && !this.options.webForms.isPostBack) {
-                this.filteredFields.push(field.name);
+                this.selecteds.push(field.name);
             }
 
             ul.appendChild(li);
         });
 
         if (!isSingleSelect) {
-            const statesCheck = getSelectAllState(this.fields, this.filteredFields);
+            const statesCheck = getSelectAllState(this.fields, this.selecteds);
 
             ul.insertBefore(
                 createDropdownItemSelectAll(
@@ -177,19 +141,6 @@ export class ZrFilterField {
                     statesCheck.isIndeterminate
                 ), divider);
         }
-
-        return ul;
-    }
-
-    renderLabel(forId) {
-        const label = this.elements.label;
-        label.className = 'form-label';
-        label.textContent = getSelectedFieldText(this.fields, this.filteredFields, this.options);
-        label.title = getSelectedFieldTitle(this.fields, this.filteredFields);
-        label.setAttribute('for', forId);
-        label.dataset.labelFilter = 'True';
-
-        this.container.appendChild(label);
     }
 
     openIfRequired(dropdown) {
@@ -201,7 +152,7 @@ export class ZrFilterField {
 
     isFieldChecked(fieldName, index, isSingleSelect) {
         if (this.options.webForms.isPostBack)
-            return this.filteredFields.includes(fieldName);
+            return this.selecteds.includes(fieldName);
 
         return isSingleSelect ? index === 0 : true;
     }

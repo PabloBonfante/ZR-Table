@@ -3,7 +3,8 @@ import {
     getSelectedFieldTitle,
     getFieldByName,
     getInputType,
-    onceInitialize
+    onceInitialize,
+    getSelectAllState
 } from '../utils/utils.js';
 import { FilterType } from '../constants/enums.js';
 
@@ -28,7 +29,7 @@ export function setupDropdownEvents(dropdown, instance) {
             );
         }
         instance.options.isOpen = false;
-        riseEvent(instance);
+        riseEvent('selectedChange', instance);
     };
 
     // Handler para cuando se muestra el dropdown
@@ -70,7 +71,6 @@ function handleDropdownClick(event, instance) {
 
     if (isMultiple) {
         const selectedCount = instance.filteredFields.length;
-
         if ((selectedCount <= instance.options.minSelected && checkbox.checked) ||
             (instance.options.maxSelected && selectedCount >= instance.options.maxSelected && !checkbox.checked)) {
             event.preventDefault();
@@ -78,16 +78,28 @@ function handleDropdownClick(event, instance) {
             return;
         }
 
-        handleMultipleSelection(checkbox, instance);
+        if (clickedLi.dataset.selectAll === 'True') {
+            handleAllSelection(checkbox, instance);
+        } else {
+            handleMultipleSelection(checkbox, instance);
+        }
     } else {
         handleSingleSelection(checkbox, instance);
     }
+}
+
+// Helper para selección de todos
+function handleAllSelection(checkbox, instance) {
+    checkbox.checked = !checkbox.checked;
+    updateAllFilteredFields(checkbox, instance);
+    updateIntermediate(instance);
 }
 
 // Helper para selección múltiple
 function handleMultipleSelection(checkbox, instance) {
     checkbox.checked = !checkbox.checked;
     updateFilteredFields(checkbox, instance);
+    updateIntermediate(instance);
 }
 
 // Helper para selección única
@@ -104,6 +116,42 @@ function updateFilteredFields(checkbox, instance) {
         : instance.filteredFields.filter(f => f !== checkbox.value);
 }
 
+// Helper para actualizar campos filtrados
+function updateAllFilteredFields(checkbox, instance) {
+    if (checkbox.checked) {
+        instance.filteredFields = instance.getVisibleFields().map((f) => f.name);
+    } else {
+        instance.filteredFields = [];
+    }
+
+    instance.elements.ul.querySelectorAll('input:not([data-select-all])').forEach(element => {
+        element.checked = checkbox.checked;
+    });
+}
+
+/**
+ * Actualiza el estado visual de un checkbox "Select All"
+ * @param {HTMLInputElement} checkbox - Elemento checkbox a actualizar
+ * @param {Object} instance - Instancia que contiene fields y filteredFields
+ */
+function updateIntermediate(instance) {
+    const checkbox = instance.elements.ul.querySelector('input[value="SelectAll"]')
+
+    if (!checkbox || !instance) {
+        console.warn('Invalid parameters for updateSelectAllState');
+        return;
+    }
+
+    const { isChecked, isIndeterminate } = getSelectAllState(
+        instance.fields || [],
+        instance.filteredFields || []
+    );
+
+    checkbox.checked = isChecked;
+    checkbox.indeterminate = isIndeterminate;
+}
+
+
 // Helper para actualizar tipo de input
 function updateInputType(fieldName, instance) {
     const field = getFieldByName(instance.fields, fieldName);
@@ -114,9 +162,16 @@ function updateInputType(fieldName, instance) {
 }
 
 // Maneja los eventos change y el posback cuando es necesario
-function riseEvent(instance) {
-    const data = { fields: instance.filteredFields, value: instance.filterValue }
-    instance.emit('filterChange', data);
+function riseEvent(eventName, instance) {
+    let data;
+
+    if (eventName === 'filterChange') {
+        data = { fields: instance.filteredFields, value: instance.filterValue };
+    } else {
+       data = { fields: instance.filteredFields };
+    }
+
+    instance.emit(eventName, data);
 
     // manejo del PostBack
     if (instance.options.webForms.autoPostBack && typeof __doPostBack === 'function') {
@@ -127,7 +182,7 @@ function riseEvent(instance) {
             data: sanitize(data),
         };
 
-        __doPostBack(instance.container.getAttribute('name'), `filterChange$${JSON.stringify(options)}`);
+        __doPostBack(instance.container.getAttribute('name'), `${eventName}$${JSON.stringify(options)}`);
     }
 }
 
@@ -144,7 +199,7 @@ function createDebouncedHandler(instance, delay = 800) {
      */
     const filterChangeValue = (val) => {
         instance.filterValue = val;
-        riseEvent(instance);
+        riseEvent('filterChange', instance);
     };
 
     // Retornamos el debounce

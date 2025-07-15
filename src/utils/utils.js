@@ -125,6 +125,32 @@ export function initColumnsFromData(fields, data) {
     return _fields;
 }
 
+/**
+ * Determina el estado de un checkbox "Select All" (checked, unchecked, indeterminate)
+ * @param {Array} fields - todos los campos disponibles
+ * @param {Array} selectedFields - array de campos seleccionados
+ * @returns {Object} Estado del checkbox { isChecked: boolean, isIndeterminate: boolean }
+ */
+export function getSelectAllState(fields = [], selectedFields = []) {
+    if (!Array.isArray(fields) || !Array.isArray(selectedFields)) {
+        return { isChecked: false, isIndeterminate: false };
+    }
+
+    const visibleFields = fields.filter(field => field?.visible === true);
+    const selectedVisibleCount = visibleFields.filter(field => 
+        selectedFields.includes(field?.name)
+    ).length;
+
+    const totalVisible = visibleFields.length;
+    const allSelected = totalVisible > 0 && selectedVisibleCount === totalVisible;
+    const someSelected = selectedVisibleCount > 0 && selectedVisibleCount < totalVisible;
+
+    return {
+        isChecked: allSelected,
+        isIndeterminate: someSelected
+    };
+}
+
 export function onceInitialize(el, callback) {
     if (el.dataset.initialize === 'True') return;
     callback();

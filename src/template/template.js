@@ -31,6 +31,8 @@ export const defaultOptions = {
         title: 'Ingrese un valor a buscar',
         placeholderDropdown: 'Campos a filtrar',
         titleDropdown: 'Seleccione los campos a filtrar',
-        titleOption: 'Seleccionar campo'
+        titleOption: 'Seleccionar campo',
+        textSelectAll: 'Seleccionar todos',
+        titleSelectAll: 'Seleccionar todos los campos'
     }
 };
