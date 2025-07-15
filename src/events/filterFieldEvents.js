@@ -146,7 +146,7 @@ function updateAllFilteredFields(checkbox, instance) {
  * @param {Object} instance - Instancia que contiene fields y filteredFields
  */
 function updateIntermediate(instance) {
-    const checkbox = instance.elements.ul.querySelector('input[value="SelectAll"]')
+    const checkbox = instance.elements.ul.querySelector('input[data-select-all]')
 
     if (!checkbox || !instance) {
         console.warn('Invalid parameters for updateSelectAllState');
