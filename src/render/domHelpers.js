@@ -69,7 +69,7 @@ export function createHeaderDropdown(texts) {
 
     const liHeader = document.createElement('li');
     liHeader.className = 'dropdown-header py-0';
-    liHeader.textContent = texts.placeholderDropdown;
+    liHeader.textContent = texts.headerText;
     if (texts.titleDropdown) liHeader.title = texts.titleDropdown;
 
     return liHeader
@@ -98,9 +98,9 @@ export function createButtonDropdown(options) {
     return btn;
 }
 
-export function createBtnGroup() {
+export function createBtnGroup(className = 'btn-group') {
     const group = document.createElement('div');
-    group.className = 'btn-group';
+    group.className = className;
 
     return group;
 }

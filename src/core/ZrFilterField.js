@@ -1,12 +1,10 @@
 import { FilterType, FieldType } from '../constants/enums.js';
 import { defaultFieldTemplate, defaultOptions } from '../template/template.js';
 import { validateEnum } from '../utils/validation.js';
-import { setupDropdownEvents, setupFilterInput } from '../events/filterFieldEvents.js';
+import { setupDropdownEvents, setupFilterInput, updateLabel } from '../events/filterFieldEvents.js';
 import {
     deepCopy,
     getInputType,
-    getSelectedFieldText,
-    getSelectedFieldTitle,
     initColumnsFromData,
     getSelectAllState
 } from '../utils/utils.js';
@@ -15,11 +13,11 @@ import {
     createDropdownItem,
     createHeaderDropdown,
     createDividerDropdown,
-    createButtonDropdown,
     createBtnGroup,
-    createDropdownMenu,
     createDropdownItemSelectAll
 } from '../render/domHelpers.js';
+
+import { ZrDropdownList } from '../core/ZrDropdownList.js'
 
 export class ZrFilterField {
     constructor(containerId, data, options = {}) {
@@ -40,8 +38,6 @@ export class ZrFilterField {
 
         this.elements = {
             input: this.container.querySelector('input[data-input-filter="True"]') || document.createElement('input'),
-            ul: this.container.querySelector('ul') || createDropdownMenu(),
-            tigger: this.container.querySelector('button') || createButtonDropdown(this.options),
             label: this.container.querySelector('label[data-label-filter="True"]') || document.createElement('label'),
         };
 
@@ -49,6 +45,7 @@ export class ZrFilterField {
         this.filteredFields = options.filteredFields || [];
         this.isInit = false;
         this._eventTarget = new EventTarget();
+        this.DropdownList;
 
         if ((this.data || this.options.fields) && !this.isInit) {
             this.init();
@@ -79,22 +76,30 @@ export class ZrFilterField {
 
     render() {
         const input = this.createInput();
-        const dropdown = this.createDropdown();
+
+        const div = document.createElement('div');
+
+        const group = createBtnGroup();
+        group.id = `${this.container.id}_Dropdown`;
+        group.appendChild(input);
+
+        div.appendChild(group);
+        this.container.appendChild(div);
+
+        debugger;
+        this.DropdownList = new ZrDropdownList(group.id, null, { ...this.options, fields: this.fields, createBtnGroup: true});
+        
+        this.filteredFields = this.DropdownList.selecteds;
+        this.fields = this.DropdownList.fields;
+        
+        // Eventos
+        setupDropdownEvents(this);
 
         if (this.options.createLabel) {
             this.renderLabel(input.id);
         }
 
-        const group = createBtnGroup();
-        group.appendChild(input);
-        group.appendChild(dropdown);
-
-        // Contenedor para serpara el label del grupo
-        const div = document.createElement('div');
-
-        div.appendChild(group);
-        this.container.appendChild(div);
-        this.openIfRequired(dropdown);
+        // this.openIfRequired(dropdown);
     }
 
     createInput() {
@@ -184,12 +189,11 @@ export class ZrFilterField {
     renderLabel(forId) {
         const label = this.elements.label;
         label.className = 'form-label';
-        label.textContent = getSelectedFieldText(this.fields, this.filteredFields, this.options);
-        label.title = getSelectedFieldTitle(this.fields, this.filteredFields);
+        updateLabel(this);
         label.setAttribute('for', forId);
         label.dataset.labelFilter = 'True';
 
-        this.container.appendChild(label);
+        this.container.insertBefore(label, this.container.firstChild);
     }
 
     openIfRequired(dropdown) {

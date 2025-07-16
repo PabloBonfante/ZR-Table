@@ -6,7 +6,7 @@ export const defaultFieldTemplate = {
     title: '',
     type: FieldType.Text,
     visible: true,
-    checked: false,
+    checked: undefined,
     order: 0
 };
 
@@ -30,6 +30,22 @@ export const defaultOptions = {
         placeholder: 'Buscar...',
         title: 'Ingrese un valor a buscar',
         placeholderDropdown: 'Campos a filtrar',
+        titleDropdown: 'Seleccione los campos a filtrar',
+        titleOption: 'Seleccionar campo',
+        textSelectAll: 'Seleccionar todos',
+        titleSelectAll: 'Seleccionar todos los campos'
+    }
+};
+
+export const dropdownOptions = {
+    filterType: FilterType.Multiple,
+    autoGenerateField: true,
+    minSelected: 1,
+    maxSelected: undefined,
+    createBtnGroup: false,
+
+    texts: {
+        headerText: 'Campos a filtrar',
         titleDropdown: 'Seleccione los campos a filtrar',
         titleOption: 'Seleccionar campo',
         textSelectAll: 'Seleccionar todos',

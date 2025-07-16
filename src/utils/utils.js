@@ -60,11 +60,7 @@ export function getSelectedFieldText(fields, filteredFields, options) {
         return '';
 
     // Respeto el orden en que el usuario cargo los campos
-    const selectedFields = filteredFields
-    .map(name => {
-        const field = fields.find(f => f.name === name);
-        return field ? (field.text || field.name) : name;
-    });
+    const selectedFields = filteredFields.map(f => f.text || f.name);
 
     // Si es filtro único, retornar el nombre del primer campo
     if (options.filterType === FilterType.Single)
@@ -86,11 +82,7 @@ export function getSelectedFieldTitle(fields, filteredFields) {
         return '';
 
     // Respeto el orden en que el usuario cargo los campos
-    const selectedFields = filteredFields
-    .map(name => {
-        const field = fields.find(f => f.name === name);
-        return field ? (field.text || field.name) : name;
-    });
+    const selectedFields = filteredFields.map(f => f.text || f.name);
 
     return `Filtrar por: ${selectedFields.join(', ')}`;
 }
@@ -138,7 +130,7 @@ export function getSelectAllState(fields = [], selectedFields = []) {
 
     const visibleFields = fields.filter(field => field?.visible === true);
     const selectedVisibleCount = visibleFields.filter(field => 
-        selectedFields.includes(field?.name)
+        selectedFields.includes(field)
     ).length;
 
     const totalVisible = visibleFields.length;

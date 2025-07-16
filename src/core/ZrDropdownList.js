@@ -1,7 +1,7 @@
 import { FilterType, FieldType } from '../constants/enums.js';
-import { defaultFieldTemplate, defaultOptions } from '../template/template.js';
+import { defaultFieldTemplate, dropdownOptions } from '../template/template.js';
 import { validateEnum } from '../utils/validation.js';
-import { setupDropdownEvents } from '../events/filterFieldEvents.js';
+import { setupDropdownEvents } from '../events/dropdownListEvents.js';
 import {
     deepCopy,
     initColumnsFromData,
@@ -22,7 +22,7 @@ export class ZrDropdownList {
     constructor(containerId, data, options = {}) {
         this.container = document.getElementById(containerId);
         this.data = data;
-        this.options = deepCopy({ ...defaultOptions }, options);
+        this.options = deepCopy({ ...dropdownOptions }, options);
         this.options.filterType = validateEnum('filterType', this.options.filterType, FilterType, FilterType.Multiple);
 
         this.fields = Array.isArray(options.fields)
@@ -62,6 +62,7 @@ export class ZrDropdownList {
         this.isInit = true;
         this.initializeColumnsFromData();
         this.render();
+        console.log(this.selecteds);
     }
 
     initializeColumnsFromData() {
@@ -73,11 +74,11 @@ export class ZrDropdownList {
     render() {
         const dropdown = this.createDropdown();
         this.container.appendChild(dropdown);
-        this.openIfRequired(dropdown);
     }
 
     createDropdown() {
-        const Group = createBtnGroup();
+        const Group = this.options.createBtnGroup ? createBtnGroup() : createBtnGroup('dropdown');
+        if (this.options.texts.titleDropdown) Group.title = this.options.texts.titleDropdown;
 
         // Btn tigger
         Group.appendChild(this.elements.tigger);
@@ -108,7 +109,7 @@ export class ZrDropdownList {
         const isSingleSelect = this.options.filterType === FilterType.Single;
 
         this.getVisibleFields().forEach((field, index) => {
-            const isChecked = this.isFieldChecked(field.name, index, isSingleSelect);
+            const isChecked = field.checked !== undefined ? field.checked : this.isFieldChecked(index, isSingleSelect);
             const li = createDropdownItem(
                 field,
                 field.title || this.options.texts.titleOption || '',
@@ -118,8 +119,13 @@ export class ZrDropdownList {
                 isChecked
             );
 
-            if (isChecked && !this.options.webForms.isPostBack) {
-                this.selecteds.push(field.name);
+            if (isChecked) {
+                if (isSingleSelect) {
+                    // Solo existe un seleccionado
+                    this.selecteds = [field];
+                } else {
+                    this.selecteds.push(field);
+                }
             }
 
             ul.appendChild(li);
@@ -139,17 +145,7 @@ export class ZrDropdownList {
         }
     }
 
-    openIfRequired(dropdown) {
-        if (this.options.webForms.isOpen) {
-            const instance = bootstrap.Dropdown.getOrCreateInstance(dropdown);
-            instance.show();
-        }
-    }
-
-    isFieldChecked(fieldName, index, isSingleSelect) {
-        if (this.options.webForms.isPostBack)
-            return this.selecteds.includes(fieldName);
-
+    isFieldChecked(index, isSingleSelect) {
         return isSingleSelect ? index === 0 : true;
     }
 
