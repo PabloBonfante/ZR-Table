@@ -13,7 +13,6 @@ import { FilterType, InputType } from '../constants/enums.js'
  */
 export function setupDropdownEvents(instance) {
     instance.DropdownList.on('selectedChange', (event) => {
-        debugger;
         console.log('selectedChange:', event.detail.fields);
         instance.filteredFields = event.detail.fields;
 
@@ -28,7 +27,7 @@ export function setupDropdownEvents(instance) {
 
 // Helper para actualizar tipo de input
 function updateInputType(instance) {
-    const fieldType = instance.fields[0]?.type || InputType.Search;
+    const fieldType = instance.filteredFields[0]?.type || InputType.Search;
     const newType = getInputType(fieldType);
     if (instance.elements.input.type !== newType) {
         instance.elements.input.type = newType;

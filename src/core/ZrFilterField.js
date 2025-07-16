@@ -86,7 +86,6 @@ export class ZrFilterField {
         div.appendChild(group);
         this.container.appendChild(div);
 
-        debugger;
         this.DropdownList = new ZrDropdownList(group.id, null, { ...this.options, fields: this.fields, createBtnGroup: true});
         
         this.filteredFields = this.DropdownList.selecteds;
@@ -98,8 +97,6 @@ export class ZrFilterField {
         if (this.options.createLabel) {
             this.renderLabel(input.id);
         }
-
-        // this.openIfRequired(dropdown);
     }
 
     createInput() {
@@ -194,13 +191,6 @@ export class ZrFilterField {
         label.dataset.labelFilter = 'True';
 
         this.container.insertBefore(label, this.container.firstChild);
-    }
-
-    openIfRequired(dropdown) {
-        if (this.options.webForms.isOpen) {
-            const instance = bootstrap.Dropdown.getOrCreateInstance(dropdown);
-            instance.show();
-        }
     }
 
     isFieldChecked(fieldName, index, isSingleSelect) {
